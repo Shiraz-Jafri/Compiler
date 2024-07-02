@@ -1,4 +1,4 @@
-# WIP-Compiler
+# Compiler
 
 COMPILER
 HOW TO USE:
