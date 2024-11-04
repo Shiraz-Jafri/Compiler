@@ -86,70 +86,71 @@ Lastly, there is a parser-lvar function to notice at the beginning of compiler.r
 ``` (compiler_x86 '(+ 2 3)) ```
 
 #### AST form:
-```
-        (X86Program
-         '()
-         (list
-          (cons
-           'start
-           (Block
-            '()
-            (list
-             (Instr
-              'movq
-              (list (Imm 1) (Reg 'rax)))
-             (Instr
-              'addq
-              (list (Imm 2) (Reg 'rax)))
-             (Jmp 'conclusion))))
-          (cons
-           'main
-           (Block
-            '()
-            (list
-             (Instr 'pushq (list (Reg 'rbp)))
-             (Instr
-              'movq
-              (list (Reg 'rsp) (Reg 'rbp)))
-             (Instr
-              'subq
-              (list (Imm 0) (Reg 'rsp)))
-             (Jmp 'start))))
-          (cons
-           'conclusion
-           (Block
-            '()
-            (list
-             (Instr
-              'addq
-              (list (Imm 0) (Reg 'rsp)))
-             (Instr 'popq (list (Reg 'rbp)))
-             (Retq))))))
+``` 
+(X86Program
+ '()
+ (list
+  (cons
+   'start
+   (Block
+    '()
+    (list
+     (Instr
+      'movq
+      (list (Imm 1) (Reg 'rax)))
+     (Instr
+      'addq
+      (list (Imm 2) (Reg 'rax)))
+     (Jmp 'conclusion))))
+  (cons
+   'main
+   (Block
+    '()
+    (list
+     (Instr 'pushq (list (Reg 'rbp)))
+     (Instr
+      'movq
+      (list (Reg 'rsp) (Reg 'rbp)))
+     (Instr
+      'subq
+      (list (Imm 0) (Reg 'rsp)))
+     (Jmp 'start))))
+  (cons
+   'conclusion
+   (Block
+    '()
+    (list
+     (Instr
+      'addq
+      (list (Imm 0) (Reg 'rsp)))
+     (Instr 'popq (list (Reg 'rbp)))
+     (Retq))))))
 ```
 
 #### x86 Syntax:
 
-      ```
-      .align 8
-      start:
-      	movq	$1, %rax
-      	addq	$2, %rax
-      	jmp conclusion
-      
-      	.globl main
-      	.align 8
-      main:
-      	pushq	%rbp
-      	movq	%rsp, %rbp
-      	subq	$0, %rsp
-      	jmp start
-      
-      	.align 8
-      conclusion:
-      	addq	$0, %rsp
-      	popq	%rbp
-      	retq
-```  
+```
+.align 8
+start:
+	movq	$1, %rax
+	addq	$2, %rax
+	jmp conclusion
+
+	.globl main
+	.align 8
+main:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$0, %rsp
+	jmp start
+
+	.align 8
+conclusion:
+	addq	$0, %rsp
+	popq	%rbp
+	retq
+```
+
 Abstract Syntax of Lvar:
 ```
   type ::= Integer
