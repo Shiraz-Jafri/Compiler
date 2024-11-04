@@ -18,6 +18,13 @@ Following Uniquify, we have remove complex operations which takes complex operat
 ``` (+ 5 2) ``` In this + operation, we have two atomic values which is fine, but ``` (+ 5 (- 2)) ``` in this expression, we have a complex operation as an argument which is problematic, so to tackle this problem, we map the operation to a variable making it atomic. ``` (Let 'tmp.1 (- 2) (+ 5 tmp.1)) ``` Now if you notice, + expression no longer contains an operation as an argument rather it's a variable and a value, which makes it atomic. Let's consider a more complex example,
 ``` (Let x 5 (Let y 10 (+ (+ x y) (- 2)))) ``` transforms into ``` (Let x 5 (Let y 10 (Let tmp.1 (+ x y) (Let tmp.2 (- 2) (+ tmp.1 tmp.2))))) ```
 In this resulting expression, we can tell that the expression (+ (+ x y) (- 2)) has two operations as arguments which is problematic. So once again, to tackle this, the arguments get mapped to variables. ``` tmp.1 = (+ x y), tmp.2 = (- 2) --> (+ tmp.1 tmp.2) ```.
+
+### Step 3: Explicate Control
+This Step is essential to Racket to make the order of the execution explicit in their syntax, this step transforms Lvar language to Cvar which flattens out the let expressions and makes the order of execution explicit. Let's consider two basic examples,
+``` (Let x 5 (+ x 5)) --> start: x.1 = 5; return x.1 + 5; ``` We first map the value 5 to variable x.1 and then return the expression. 
+``` (Let x.1 (Let y.1 5 (Var y.1)) (Prim '+ (list (Var 'x.1) (Int 10)))) --> start: y.1 = 5; x.1 = y.1; return (+ x.1 10) ``` In this example, we note that the right hand side of let expression executes before the body, so (Let y.1 5 (Var y.1)) executes before everything else, which is why in Cvar, we map y.1 to 5 before everything else. 
+
+
 HOW TO USE:
 
   Compiler.rkt is a file that's been built by smaller passes that includes a small description of each of the passes.
