@@ -1,6 +1,13 @@
 # Compiler
 
-COMPILER
+For many years, we have been surrounded by numerous programming languages that it's gotten harder to choose from. Whether you want to use Java, or Python, or some other langauge like C++, there is always a certainty when programming, which is that the computer is always able to understand the language. How does it do that? How is it able to always understand the programming language? Well, we have compilers to thank for that.
+Imagine that you have a person who's job is to take any language in the world, and convert it to your native language. Because of this person, you are able to understand all the languages in the world, neat right? Sort of like a real time translator who can immediately translate a phrase in your native language within seconds that you don't even have to think about the orginal language spoken to you. 
+That's how a compiler acts in the programming world, a tool that will take a program in a language and convert it so that the cpu can understand it.
+
+## My Custom Compiler
+I am an undergraduate at Indiana University Bloomington and with the knowledge I have obtained here, I was able to create my own compiler that translates a subset of programming language called Racket into x86 Assembly. 
+A compiler is made up of many steps, each step is responsible for a valuable operation that transforms the source code more and more into target machine language. 
+
 HOW TO USE:
 
   Compiler.rkt is a file that's been built by smaller passes that includes a small description of each of the passes.
