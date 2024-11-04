@@ -30,17 +30,17 @@ In this resulting expression, we can tell that the expression ``` (+ (+ x1 y1) (
 ### Step 3: Explicate Control
 This Step is essential to Racket because unlike most popular languages, Racket isn't explicit with its syntax, that is, it's not easy to tell in what order are the operations executing. To tackle this problem and get one step closer to our target language, we transform Lvar language to Cvar language. 
 
-Let's consider two basic examples, ``` (Let x1 5 (+ x1 5)) --> start: x1 = 5; return x1 + 5; ``` We first map the value 5 to variable x.1 and then return the expression. The order of operation here is easy to understand. But one thing to note is that, the right handside of let expression is executed before the body, that is, 5 is evaluated then the body ``` (+ x1 5) ``` is evaluated. 
+Let's consider two basic examples, ``` (Let x1 5 (+ x1 5)) --> start: x1 = 5; return x1 + 5; ``` We first map the value 5 to variable x1 and then return the expression. The order of operation here is easy to understand. But one thing to note is that, the right handside of let expression is executed before the body, that is, 5 is evaluated then the body ``` (+ x1 5) ``` is evaluated. 
 
-Consider a more complex example, ``` (Let x.1 (Let y.1 5 (Var y.1)) (Prim '+ (list (Var 'x.1) (Int 10)))) ```
+Consider a more complex example, ``` (Let x1 (Let y1 5 (Var y1)) (Prim '+ (list (Var 'x1) (Int 10)))) ```.
 
-In this example, (Let y1 5 (Var y1)) would be executed first then the body will be executed. So the program above translates into Cvar which results in
+In this example, ``` (Let y1 5 (Var y1)) ``` would be executed first then the body will be executed. So the program above translates into Cvar which results in
 
-``` (cons 'start (Seq (Assign (Var 'y1) (Int 5)) (Seq (Assign (Var 'x1) (Var 'y1)) (Return (Prim '- (list (Var 'x))))))) ```
+``` (cons 'start (Seq (Assign (Var 'y1) (Int 5)) (Seq (Assign (Var 'x1) (Var 'y1)) (Return (Prim '- (list (Var 'x))))))) ```.
 
 In simpler terms to understand better: ``` start: y1 = 5; x1 = y1; return -x1  ``` 
 
-Now due to this step, we can very clearly tell what is executing first and so on. Racket can make these order of operations explicit, which is why this step is a crucial step which translates into an intermediate language. 
+Now due to this step, we can very clearly tell what is executing first and so on. Racket can make it harder to tell which operation is executing first, which is why this step is a crucial step which translates Lvar into an intermediate language Cvar. 
 
 ### Step 4: Select Instructions
 
