@@ -43,18 +43,113 @@ In simpler terms to understand better: ``` start: y1 = 5; x1 = y1; return -x1  `
 Now due to this step, we can very clearly tell what is executing first and so on. Racket can make it harder to tell which operation is executing first, which is why this step is a crucial step which translates Lvar into an intermediate language Cvar. 
 
 ### Step 4: Select Instructions
+Select Instructions is a step that translates Cvar into x86Var. In Lvar, we have total of three operations to translate, 
 
+```(Prim '+ (list (Int n) (Int m))), (Prim '- (list (Int n) (Int m))), (Prim '- (list (Int n))), and (Prim 'read '()). ```
 
-HOW TO USE:
+Considering we have an add operation, we can do it two ways, first is we store the first value in a register and add the second value to that same register. But as of this step, we don't have to worry about replacing variables, so the syntax can be simpler. 
 
-  Compiler.rkt is a file that's been built by smaller passes that includes a small description of each of the passes.
-  To get a better understanding each pass, it is recommended to call each pass function to differentiate their behavior.
-  my_compiler function takes all the passes function and applies them all together resulting in an X86 AST form.
-  To compare whether my_compiler outputs the same evaluated expression as Racket, use interp-x86 function from included interp.rkt file.
+Suppose we have the operation ``` (Prim '+ (list (Int 1) (Var 'x))) --> addq 1, x ``` Since we don't have to worry about variables, our translated programs are shorter. 
+
+Suppose we have ``` (Prim '+ (list (Int 1) (Int 2))) --> movq 1, x then addq 2, x ``` This same syntax follows with every operation with the exception of 
+
+``` (Let x1 (Prim 'read '()) (Var 'x1)) --> callq read_int then movq %rax, x1 ``` here read_int function gets called and the return value is stored in rax register which then is moved to the x1 variable. And lastly if an expression is an int value it gets converted to an immediate integer, consider ``` (Int 10) --> (Imm 10) ```.
+
+### Step 5: Assign Homes
+This step takes the result of select instructions and replaces all the variables with stack locations. The key thing about stack locations is that they have to be multiples of 8 as the stack gets more information, the variables convert to the according location in the stack. Consider a simple example,
+
+``` movq $42, a. movq a, b. movq b, %rax. --> movq $42, -8(%rbp). movq -8(%rbp), -16(%rbp). movq -16(%rbp), %rax. ```
+
+### Step 6: Patch Instructions
+Similar to the previous step, this step takes care of a minor issue that may or may not occur after assign homes. Having two stack locations as arguments is not allowed, to tackle this problem, we take the first stack location, store it inside a rax register, and then move the second stack location to the rax register. Eliminating the need of two stack locations in the same operation. Consider the example,
+
+``` movq $42, -8(%rbp). movq -8(%rbp), -16(%rbp). movq -16(%rbp), %rax. --> movq -8(%rbp), %rax. movq %rax, -16(%rbp). ```
+
+### Step 7: Generate Prelude and Conclusion
+The main function in x86 ``` pushq %rbp. movq %rsp, %rbp. subq $16, %rsp. jmp start ``` first starts off by subtracting 8 from the stack, then saves the base pointer at rsp which then replaces the base pointer with rsp (current pointer). And then finally the stack pointer moves down to make enough room for the variables. 
+
+The conclusion function in x86 ``` addq $16, %rsp. popq %rbp. retq ``` The first instruction adds 16 to rsp which essentially moves the stack pointer back to the old base pointer. Then popq line restores the old base pointer to rbp and adds 8 to the stack pointer. And finally retq, jumps back to the procedure that called this one and adds 8 to the stack pointer. 
+
+Through the use of these passes, we take the transformation of Lvar -> x86Int step by step. Most programming languages have their own unique functionality that has to be transformed in such a way to make up for the syntax of x86Int. Now, it's time to test the function in Racket and see it in action.
+
+### HOW TO USE:
+
+Compiler.rkt file is the main file to use. Other files are neccessary files that make sure that the programs follows the restriction of the different variations of the languages. Suppose we have a program (Prim '+ (list (Int 10) (Int 10.5)), now we know that you can add an integer and a float value, but for our compiler function to know this, we need to provide the proper type checkers to make sure that it follows our source langauge restrictions. 
   
-Coupler Disclaimers about Base Programming Language:
-  This compiler will not be taking Racket programming language and converting to x86, it takes a variation of it called Lvar which is built using Racket
-  
+Other file to mention is Utilities.rkt and runtime-config.rkt, this file is possibly the most important file because it provides all the structures that we use for our source language. Along with that, it also includes more structures that are basically upgrades to our source language. These necessary files are written by my Professor Jermey Siek. With his written structures and helpful functions, we don't have to worry about creating basic functions and instead, we can focus on the main funcionality of the compiler, in another words, we can focus on the main steps mentioned.
+
+Lastly, there is a parser-lvar function to notice at the beginning of compiler.rkt, this function allows us to write our operations like 
+``` (Prim '+ (list (Int 10) (Int 20))) ``` in basic Racket syntax. The purpose of this is purley to save time, so you can write a program faster, for example
+
+``` (Prim '+ (list (Int 10) (Int 20))) --> '(+ 10 20) ```
+
+``` (compiler_x86 '(+ 2 3)) ```
+
+#### AST form:
+```
+        (X86Program
+         '()
+         (list
+          (cons
+           'start
+           (Block
+            '()
+            (list
+             (Instr
+              'movq
+              (list (Imm 1) (Reg 'rax)))
+             (Instr
+              'addq
+              (list (Imm 2) (Reg 'rax)))
+             (Jmp 'conclusion))))
+          (cons
+           'main
+           (Block
+            '()
+            (list
+             (Instr 'pushq (list (Reg 'rbp)))
+             (Instr
+              'movq
+              (list (Reg 'rsp) (Reg 'rbp)))
+             (Instr
+              'subq
+              (list (Imm 0) (Reg 'rsp)))
+             (Jmp 'start))))
+          (cons
+           'conclusion
+           (Block
+            '()
+            (list
+             (Instr
+              'addq
+              (list (Imm 0) (Reg 'rsp)))
+             (Instr 'popq (list (Reg 'rbp)))
+             (Retq))))))
+```
+
+#### x86 Syntax:
+
+      ```
+      .align 8
+      start:
+      	movq	$1, %rax
+      	addq	$2, %rax
+      	jmp conclusion
+      
+      	.globl main
+      	.align 8
+      main:
+      	pushq	%rbp
+      	movq	%rsp, %rbp
+      	subq	$0, %rsp
+      	jmp start
+      
+      	.align 8
+      conclusion:
+      	addq	$0, %rsp
+      	popq	%rbp
+      	retq
+```  
 Abstract Syntax of Lvar:
 ```
   type ::= Integer
