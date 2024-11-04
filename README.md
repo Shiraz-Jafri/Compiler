@@ -7,6 +7,43 @@ Imagine you are trying to talk to someone in Spanish but you don't know any Span
 ## My Custom Compiler
 I am an undergraduate at Indiana University Bloomington and with the knowledge I have obtained here in programming languages, I was able to create my own compiler that translates a subset of programming language called Racket into x86 Assembly. 
 A compiler is made up of many steps, each step is responsible for a valuable operation that transforms the source code more and more into the target machine language. 
+Our base language in this repo is Lvar, which is a very small language consisting or arithmetic operations +, -, negation, read (input), and variables/integers. 
+The abstract syntax that will be used is listed below. 
+
+#### Base Language (Lvar): 
+Abstract Syntax:
+```
+	type ::= Integer
+	exp ::= (Int int) | (Prim 'read ()) | (Prim '- (exp)) | (Prim '+ (exp exp)) | (Prim '- (exp exp))
+	exp ::= (Var var) | (Let var exp exp)
+	LVar ::= (Program ’() exp)
+  ```
+
+#### Intermediate Language (Cvar):
+Abstract Syntax:
+```
+	atm ::= (Int int) | (Var var)
+	exp ::= atm | (Prim 'read ()) | (Prim '- (atm))
+	| (Prim '+ (atm atm)) | (Prim '- (atm atm))
+	stmt ::= (Assign (Var var) exp)
+	tail ::= (Return exp) | (Seq stmt tail)
+	CVar ::= (CProgram info ((label . tail) …))
+```
+
+#### Source Language (X86Var):
+Abstract Syntax:
+```
+	reg ::= rsp | rbp | rax | rbx | rcx | rdx | rsi | rdi |
+	r8 | r9 | r10 | r11 | r12 | r13 | r14 | r15
+	arg ::= (Imm int) | (Reg reg) | (Deref reg int)
+	instr ::= (Instr addq (arg arg)) | (Instr subq (arg arg))
+	| (Instr negq (arg)) | (Instr movq (arg arg))
+	| (Instr pushq (arg)) | (Instr popq (arg))
+	| (Callq label int) | (Retq) | (Jmp label)
+	block ::= (Block info (instr …))
+	x86Int ::= (X86Program info ((label . block)…))
+
+```
 
 ### Step 1: Uniquify
 Uniquify is a step that is very crucial in identifying each variable with its proper value. In some programming languages, there is a concept called variable shadowing which allows different variables to have the same name but different values. Let's look at an example with let expressions. To understand let expressions, think of an expression with a restricted scope. 
@@ -83,6 +120,7 @@ Lastly, there is a parser-lvar function to notice at the beginning of compiler.r
 
 ``` (Prim '+ (list (Int 10) (Int 20))) --> '(+ 10 20) ```
 
+Because the compiler functions automatically calls parser-lvar, you can just give an expression in racket syntax like so (make sure to include ' before the expression)
 ``` (compiler_x86 '(+ 2 3)) ```
 
 #### AST form:
@@ -151,19 +189,4 @@ conclusion:
 	retq
 ```
 
-Abstract Syntax of Lvar:
-```
-  type ::= Integer
-  exp ::= (Int int) | (Prim 'read ()) | (Prim '- (exp)) | (Prim '+ (exp exp)) | (Prim '- (exp exp))
-  exp ::= (Var var) | (Let var exp exp)
-  LVar ::= (Program ’() exp)
-  (You can find more information on how Lvar works in the included Utilities.rkt file).
-  ````
-
-Although the given Abstract Sytanx of Lvar, because my_compiler applies parser-lvar, you can give an expression in Racket, parser-lvar function will convert given
-Racket program into the Abstract Syntax of Lvar, make sure that it doesn't include a feature that's not included in syntax of Lvar.
-
 Reference: Textbook - Essentials of Compilation: An Incremental Approach in Racket/Python by Jeremy Siek
-
-
-  
