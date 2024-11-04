@@ -11,12 +11,13 @@ A compiler is made up of many steps, each step is responsible for a valuable ope
 Uniquify is a step that is very crucial in identifying each variable with its proper value. In some programming languages, there is a concept called variable shadowing which allows different variables to have the same name but different values. Let's look at an example with let expressions. To understand let expressions, think of an expression with a restricted scope. ```(Let x 5 (+ x x)) ``` In this example, we created an expression that returns 10, with a variable x that's bound to 5, we cannot use this x anywhere outside of this let expression. So let's look at an example of how uniquify works.
 ``` (Let x 10 (Let x 5 (+ x 5))) ``` In this example, we have two variables with the same name, the inner x is mapped to 5, but the outer x is mapped to 10
 With the help of Uniquify, we can transform the program so that it has unique variables.
-``` (Let x 10 (Let x 5 (+ x 5))) ``` transforms to ``` (Let x1 10 (Let x2 5 (+ x2 5)) ```
+``` (Let x 10 (Let x 5 (+ x 5))) ``` transforms to ``` (Let x1 10 (Let x2 5 (+ x2 5)) ```.
 
 ### Step 2: Remove Complex Operation
 Following Uniquify, we have remove complex operations which takes complex operation and maps it to a variable. This is an important step that allows our source language to be restricted to only have atomic arguments to operations. Let's consider an example, 
 ``` (+ 5 2) ``` In this + operation, we have two atomic values which is fine, but ``` (+ 5 (- 2)) ``` in this expression, we have a complex operation as an argument which is problematic, so to tackle this problem, we map the operation to a variable making it atomic. ``` (Let 'tmp.1 (- 2) (+ 5 tmp.1)) ``` Now if you notice, + expression no longer contains an operation as an argument rather it's a variable and a value, which makes it atomic. Let's consider a more complex example,
-``` (Let x 5 (Let y 10 (+ (+ x y) (- 2)))) ``` transforms into ``` (Let x 5 (Let y 10 (Let tmp.1 (+ x y) (Let tmp.2 (- 2) (+ tmp.1 tmp.2))))) ``` In this resulting expression, we can tell that the expression (+ (+ x y) (- 2)) has two operations as arguments which is problematic. So once again, to tackle this, the arguments get mapped to variables. tmp.1 = (+ x y), tmp.2 = (- 2) --> (+ tmp.1 tmp.2)
+``` (Let x 5 (Let y 10 (+ (+ x y) (- 2)))) ``` transforms into ``` (Let x 5 (Let y 10 (Let tmp.1 (+ x y) (Let tmp.2 (- 2) (+ tmp.1 tmp.2))))) ```
+In this resulting expression, we can tell that the expression (+ (+ x y) (- 2)) has two operations as arguments which is problematic. So once again, to tackle this, the arguments get mapped to variables. ``` tmp.1 = (+ x y), tmp.2 = (- 2) --> (+ tmp.1 tmp.2) ```.
 HOW TO USE:
 
   Compiler.rkt is a file that's been built by smaller passes that includes a small description of each of the passes.
