@@ -702,6 +702,9 @@
                    (uniquify
                     (type-check-Lvar (Program '()
                                               (parser-lvar e)))))))))))))
+; call this function to translate program in Racket into x86. 
+; Make sure that the features you are writing in Racket stays within the functionality of Lvar
+; that is, make sure it is only arithmethic operations such as +, -, negation, variable, integer, and read.
 
 ; compiler_ast : Lvar (Racket Sub Expression) -> x86Int
 (define (compiler_ast e)
