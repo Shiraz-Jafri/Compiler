@@ -1,13 +1,13 @@
 # Compiler
 
-For many years, we have been surrounded by numerous programming languages that it's gotten harder to choose from. Whether you want to use Java, or Python, or some other langauge like C++, there is always a certainty when programming, which is that the computer is always able to understand the language. How does it do that? Whenever you start with a new programming language, you download the programming language and voila! You can write a program in that language and the computer is able to understand it. What's interesting about that is that when you download the programming language, it comes with a tool called a compiler. This tool takes program written in source language and translates it to the target machine language. 
+For many years, we have been surrounded by numerous programming languages that it's gotten harder to choose from. Whether you want to use Java, or Python, or some other langauge like C++, there is always a certainty when programming, which is that the computer is always able to understand the language. How does it do that? Whenever you start with a new programming language, you download the programming language and voila! You can write a program in that language and the computer is able to understand it. What's interesting about that is that when you download the programming language, it comes with a tool called a compiler. This tool takes the program written in source language and translates it to the target machine language. 
 
 Imagine you are trying to talk to someone in Spanish but you don't know any Spanish. Most likely, you will get a translator who will first hear the speaker talk in Spanish, and then translate it to you in your native language. Due to the translator, you are able to speak spanish in a way, which is neat, but now imagine if that translator is so fast that it translates anything in Spanish within seconds, to the point where you don't even have to think about it, it's natural. Sort of like speaking Spanish, when you are fluent in a language, you don't have to translate word by word, you just hear the phrase and immediately understand it. That's what a compiler does for a computer. 
 
 ## My Custom Compiler
-I am an undergraduate at Indiana University Bloomington and with the knowledge I have obtained here in programming languages, I was able to create my own compiler that translates a subset of programming language called Racket into x86 Assembly. 
+I am an undergraduate at Indiana University Bloomington and with the knowledge I have obtained through Jeremy Siek's compilers class, I was able to create my own compiler that translates a subset of programming language called Racket into x86 Assembly. 
 A compiler is made up of many steps, each step is responsible for a valuable operation that transforms the source code more and more into the target machine language. 
-Our base language in this repo is Lvar, which is a very small language consisting or arithmetic operations +, -, negation, read (input), and variables/integers. 
+Our base language in this repo is Lvar, which is a very small language consisting of arithmetic operations +, -, negation, read (input), and variables/integers. 
 The abstract syntax that will be used is listed below. 
 
 #### Base Language (Lvar): 
