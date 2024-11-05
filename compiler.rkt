@@ -33,22 +33,14 @@
 
 (define (test-uniquify expE actualE)
   (when (not (equal? expE actualE))
-    (error "Bad")))
-
-(define (R-convert env v)
-  (match env
-    [`() `(Var ,v)]
-    [`((,var . ,count) . ,rest)
-     #:when (eqv? var v)
-     `(Var ,v)]
-    [`((,var ,count) . ,rest)
-     `((,var . ,count)
-       ,(R-convert rest v))]))   
+    (error "Bad")))   
 
 (define test1 (Let 'y (Int 3) (Let 'y (Int 3) (Var 'y))))
 (define test2 (Let 'x (Let 'x (Int 4) (Var 'x)) (Var 'x)))
 (define test3 (Let 'x (Let 'x (Int 4) (Var 'x)) (Let 'y (Let 'z (Int 4) (Int 4)) (Var 'x))))
-
+;; Step 1
+; Responsible for transforming programs such that duplicate variables don't exist.
+; No Variable Shadowing
 ;; uniquify : Lvar -> Lvar
 
 (define (append-s-n sym num)
@@ -84,9 +76,11 @@
                 un-body))]
         [(Prim op es)
          (Prim op (for/list ([e es])
-                    ((uniquify-exp env) e)))])))) 
+                    ((uniquify-exp env) e)))]))))
 
+;; Step 2
 ;; remove-complex-opera* : Lvar -> Lvar
+; Responsible for minimizing complex operation
 
 (define (remove-complex-opera* p)
   (match p
@@ -129,8 +123,7 @@
                                1)))]))
 
 ; rco-atm : Expression Alist -> Expression Alist
-; takes a subexpression that's complicated and returns it as an atomic expression by mapping subexpressions to temporary variables.
-; and returns an alist that maps temporary variables to complex expressions.
+
 
 (define (rco-atm e env count)
   (match e
@@ -242,7 +235,9 @@
 
 (define test4 (Let 'x (Int 3) (Prim '+ (list (Var 'x) (Int 10)))))
 
+; Step 3
 ;; explicate-control : Lvar -> Cvar
+; responsible for making sure the order of operations is clear.
 
 (define (explicate-control p)
   (match p
@@ -291,7 +286,10 @@
 (define test10 (CProgram '() (list (cons 'start (Return (Int 42))))))
 (define test11 (explicate-control test8))
 
-;; select-instructions : Cvar -> x86var
+; Step 4
+;; select-instructions : Cvar -> x86Var
+; Translates Cvar into x86Var.
+; Takes each operation and converts it into x86Var syntax.
 
 (define (select-instructions p)
   (match p
@@ -447,6 +445,10 @@
     [else (cons (cons (caar info) accu) (itos (cdr info) (- accu 8)))]))
 
 (define sta-lo-hold '())
+; Step 5
+;; assign-homes X86Var -> X86Int
+; Responsible for converting x86Var to x86Int
+; Makes sure that there are no more variables, instead there are stack locations.
 
 (define (assign-homes p)
   (begin
@@ -519,7 +521,9 @@
 (define p1
   (assign-homes (X86Program (lti b1) b1)))
 
-;; patch-instructions : x86var -> x86int
+; Step 6
+;; patch-instructions : x86Int -> x86Int
+; Responsible for making sure there are at most one stack location in one instruction
 
 (define (patch-inst p)
   (match p
@@ -612,8 +616,9 @@
 
 (define tttt1
   (list (Instr 'movq (list (Imm 42) (Deref 'rbp -16))) (Instr 'movq (list (Deref 'rbp -16) (Deref 'rbp -8))) (Instr 'movq (list (Deref 'rbp -8) (Reg 'rax)))))
-
+; Step 7
 ;; prelude-and-conclusion : x86int -> x86int
+; Last step, responsible for wrapping the translated program with main and conclusion block
 
 (define main-generator
   (lambda (sta-lo)
@@ -687,6 +692,7 @@
            (main-generator num)
            (conclusion-generator num)))))]))
 
+; compiler_x86 : Lvar (Racket Sub Expression) -> String (x86 syntax)
 (define (compiler_x86 e)
   (printf (print-x86 (prelude-and-conclusion
    (patch-inst (assign-homes
@@ -697,6 +703,7 @@
                     (type-check-Lvar (Program '()
                                               (parser-lvar e)))))))))))))
 
+; compiler_ast : Lvar (Racket Sub Expression) -> x86Int
 (define (compiler_ast e)
   (prelude-and-conclusion
    (patch-inst (assign-homes
@@ -707,14 +714,3 @@
                     (type-check-Lvar (Program '()
                                               (parser-lvar e)))))))))))
 
-
-#;(define compiler-passes
-    `(
-      ("uniquify" ,uniquify ,interp-Lvar ,type-check-Lvar)
-      ("remove complex opera*" ,remove-complex-opera* ,interp-Lvar ,type-check-Lvar)
-      ("explicate control" ,explicate-control ,interp-Cvar ,type-check-Cvar)
-      ("instruction selection" ,select-instructions ,interp-x86-0)
-      ("assign homes" ,assign-homes ,interp-x86-0)
-      ("patch instructions" ,patch-inst ,interp-x86-0) 
-      ("prelude-and-conclusion" ,prelude-and-conclusion ,interp-x86-0)
-      )) 
